@@ -1,0 +1,11 @@
+.DS_Store
+*.pyc
+*.bak
+*.cache
+*.cookies
+*.swp
+.ropeproject
+cache
+*.idea
+*.dump
+*.log
