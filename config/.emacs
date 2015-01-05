@@ -265,21 +265,6 @@
 ;; 2011.06.13 add: 缩进设定为4
 (setq standard-indent 4)
 
-;; 2011.11.25 add: ess for connect with R
-;; (setq load-path (append load-path'("/usr/share/emacs/site-lisp/ess/lisp/")))
-;; (require 'ess-site)
-;; 2012.06.17 add: ess chinese support
-;; (add-hook 'ess-post-run-hook
-;;	  (lambda ()
-;;	    (set-buffer-file-coding-system 'utf-8 'utf-8)
-;;	    (set-buffer-process-coding-system 'utf-8 'utf-8)
-;;	    )
-;;	  )
-
-;; 2012.06.17 add: knitr support
-;;(require 'ess-knitr)
-;;(global-set-key (kbd "C-x C-k") 'ess-swv-knit)
-
 ;; 2013.02.21 add: mit-scheme
 (setq scheme-program-name
     "/Users/ppyang/bin/MIT-SCHEME/mit-scheme")
@@ -315,6 +300,8 @@
   (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
   )
 
+(add-to-list 'load-path "~/.emacs.d/plugins/yasnippet")
+
 (elpy-enable)
 ;; 修改一个bug
 (define-key yas-minor-mode-map (kbd "C-c k") 'yas-expand)
@@ -338,7 +325,7 @@
 ;; 设置初始窗口位置及大小
 (set-frame-position (selected-frame) 0 0)
 (set-frame-width (selected-frame) 176)
-(set-frame-height (selected-frame) 51)
+(set-frame-height (selected-frame) 50)
 
 ;; 设置html模式缩进
 (add-hook 'html-mode-hook
@@ -349,33 +336,39 @@
 ;; 支持进行sudo的保存
 (require 'sudo-save)
 
+;; org-mode设置
+
+;; 自动换行
+(add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
+(global-set-key [f7] 'toggle-truncate-lines)
+
 ;; org && github pages settings
-(require 'org-publish)
+(require 'ox-publish)
+(require 'ox-html)
+
 (setq org-publish-project-alist
-      '(("org-acaird"
-         ;; Path to your org files.
-         :base-directory "~/Workspace/blog/raully7.github.io/_org" (srcdir)
-         :base-extension "org" (extension)
-         ;; Path to your Jekyll project.
-         :publishing-directory "~/Workspace/blog/raully7.github.io/_posts" (destination)
-         :recursive t
+      '(("org-html" 
+	 :base-directory "~/Workspace/blog/raully7.github.io/_org"
+	 :base-extension "org"
+	 :publishing-directory "~/Workspace/blog/raully7.github.io/_posts"
+	 :recursive t
 	 :publishing-function org-html-publish-to-html
          :headline-levels 4
+	 :table-of-contents: t
          :html-extension "html"
-         :body-only t ;; Only export section between <body> </body> (body-only)
-         )
-        ("org-static-acaird"
+	 :auto-postamble nil
+	 :body-only t
+	 )
+
+	("org-static"
          :base-directory "~/Workspace/blog/raully7.github.io/assets" (imgsrc)
          :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf\\|php" (imgext)
          :publishing-directory "~/Workspace/blog/raully7.github.io/assets" (imgdest)
          :recursive t
-         :publishing-function org-publish-attachment)
+         :publishing-function org-publish-attachment
+	 )
 
-        ("blog" :components ("org-acaird" "org-static-acaird"))
-        ))
-
-(add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
-
+	("blog" :components ("org-html" "org-static"))))
 
 ;; 支持utf-8的shell
 (defun utf8-shell ()
@@ -383,4 +376,47 @@
   (interactive)
   (set-default-coding-systems 'utf-8)
   (shell))
+
 (global-set-key (kbd "C-x SPC") 'utf8-shell)
+
+;; 2014.11.05 add: ess for connect with R
+(require 'auto-complete)
+(require 'ess-site)
+(add-hook 'ess-post-run-hook
+	  (lambda ()
+	    (set-buffer-file-coding-system 'utf-8 'utf-8)
+	    (set-buffer-process-coding-system 'utf-8 'utf-8)
+	    (global-auto-complete-mode)
+	    (define-key ac-completing-map "\t" 'ac-complete)
+	    )
+	  )
+
+;;(setq ess-use-auto-complete 'script-only)
+;; 2012.06.17 add: knitr support
+;;(require 'ess-knitr)
+;;(global-set-key (kbd "C-x C-k") 'ess-swv-knit)
+
+;; enable org babel
+(org-babel-do-load-languages
+      'org-babel-load-languages
+      '((emacs-lisp . t)
+        (ruby . t)
+        (ditaa . t)
+        (python . t)
+        (sh . t)
+        (latex . t)
+        (plantuml . t)
+        (R . t)))
+
+;; enable org-mode export md
+;;(eval-after-load "org"
+;;  '(require 'ox-md nil t))
+
+;; github flavored markdown
+(eval-after-load "org"
+   '(require 'ox-gfm))
+
+;; emacs lisp auto-complete
+(setq tab-always-indent 'complete)
+(add-to-list 'completion-styles 'initials t)
+(put 'narrow-to-region 'disabled nil)
